@@ -53,7 +53,7 @@ func EvaluateGame(gameId string) {
 	}
 
 	resultString := ""
-	teamIndex1 := GetTeamImpactIndex(event.Competitions[0].Competitors[0].Id) + 0.2 // add 0.2 to home team
+	teamIndex1 := GetTeamImpactIndex(event.Competitions[0].Competitors[0].Id) + float32(config.Home) // add 0.2 to home team
 	teamIndex2 := GetTeamImpactIndex(event.Competitions[0].Competitors[1].Id)
 
 	if teamIndex1 > teamIndex2 {

@@ -79,13 +79,13 @@ func GetTeamImpactIndex(teamId string) float32 {
 		for _, stat := range category.Stats {
 			if slices.Contains(ImportantStats, stat.Name) {
 				if stat.Name == "turnOverDifferential" {
-					impactIndex += stat.Value * 0.8
+					impactIndex += stat.Value * float32(config.TO)
 				}
 				if stat.Name == "passingBigPlays" {
-					impactIndex += stat.Value * 0.6
+					impactIndex += stat.Value * float32(config.Pass)
 				}
 				if stat.Name == "rushingBigPlays" {
-					impactIndex += stat.Value * 0.6
+					impactIndex += stat.Value * float32(config.Run)
 				}
 			}
 
