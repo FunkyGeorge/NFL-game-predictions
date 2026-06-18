@@ -4,17 +4,17 @@ import (
 	"database/sql"
 	// "flag"
 	"fmt"
-	"log"
+	_ "github.com/mattn/go-sqlite3"
 	"guess-nfl-winners/config"
 	"guess-nfl-winners/database"
-	_ "github.com/mattn/go-sqlite3"
+	"log"
 )
 
 func Simulate() {
+	fmt.Println("Starting Simulation")
 	// flag.Float64Var(&config.TO, "turnovers", 1, "Weight to apply to turnovers")
 	// flag.Float64Var(&config.Pass, "passing", 1, "Weight to apply to big passing plays")
 	// flag.Float64Var(&config.Run, "running", 1, "Weight to apply to big run plays")
-	// flag.Float64Var(&config.Conv, "conv", 1, "Weight to apply to 4th down conversions")
 	// flag.Float64Var(&config.Home, "home", 0.5, "Weight to apply to being the home team")
 	//
 	// flag.Parse()
@@ -50,21 +50,15 @@ func Simulate() {
 			log.Fatal(err)
 		}
 
-		var score1 float32 = (
-			team1.TurnOverDifferential * float32(config.TO) +
-			team1.PassingBigPlays * float32(config.Pass) +
-			team1.RushingBigPlays * float32(config.Run) +
-			team1.FourthDownConvs * float32(config.Conv)) / team1.GamesPlayed
+		var score1 float32 = (team1.TurnOverDifferential*float32(config.TO) +
+			team1.PassingBigPlays*float32(config.Pass) +
+			team1.RushingBigPlays*float32(config.Run))
 
+		var score2 float32 = (team2.TurnOverDifferential*float32(config.TO) +
+			team2.PassingBigPlays*float32(config.Pass) +
+			team2.RushingBigPlays*float32(config.Run))
 
-
-		var score2 float32 = (
-			team2.TurnOverDifferential * float32(config.TO) +
-			team2.PassingBigPlays * float32(config.Pass) +
-			team2.RushingBigPlays * float32(config.Run) +
-			team2.FourthDownConvs * float32(config.Conv)) / team2.GamesPlayed
-
-		if (event.HomeTeam == team1.TeamId) {
+		if event.HomeTeam == team1.TeamId {
 			score1 = score1 + float32(config.Home)
 		} else {
 			score2 = score2 + float32(config.Home)
@@ -82,7 +76,7 @@ func Simulate() {
 		}
 	}
 
-	fmt.Printf("Results: %.2f - TO: %.2f, Pass: %.2f, Rush: %.2f, Conv: %.2f, Home: %.2f\n",
-		float32(totalCorrectAssessments)/float32(totalGames) * 100,
-		config.TO, config.Pass, config.Run, config.Conv, config.Home)
+	fmt.Printf("Results: %.2f - TO: %.2f, Pass: %.2f, Rush: %.2f, Home: %.2f\n",
+		float32(totalCorrectAssessments)/float32(totalGames)*100,
+		config.TO, config.Pass, config.Run, config.Home)
 }

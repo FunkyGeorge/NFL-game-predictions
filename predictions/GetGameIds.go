@@ -3,11 +3,11 @@ package predictions
 import (
 	"encoding/json"
 	"fmt"
+	"guess-nfl-winners/config"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
-	"guess-nfl-winners/config"
 )
 
 type GameItem struct {
@@ -19,7 +19,8 @@ type GamesByWeekResponse struct {
 }
 
 func GetGameIds(week int) []string {
-	req, _ := http.NewRequest("GET", fmt.Sprintf("https://nfl-api-data.p.rapidapi.com/nfl-weeks-events?year=2025&week=%s&type=2", strconv.Itoa(week)), nil)
+	// Currently set for postseason type 3
+	req, _ := http.NewRequest("GET", fmt.Sprintf("https://nfl-api-data.p.rapidapi.com/nfl-weeks-events?year=2025&week=%s&type=3", strconv.Itoa(week)), nil)
 	req.Header.Add("x-rapidapi-key", config.ApiKey)
 	req.Header.Add("x-rapidapi-host", config.ApiHost)
 
@@ -28,7 +29,7 @@ func GetGameIds(week int) []string {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
@@ -44,6 +45,6 @@ func GetGameIds(week int) []string {
 	for _, gameItem := range games.Items {
 		gameIds = append(gameIds, gameItem.GameId)
 	}
-	
+
 	return gameIds
 }
