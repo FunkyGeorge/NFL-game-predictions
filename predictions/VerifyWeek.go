@@ -71,7 +71,12 @@ func VerifyWeek() {
 		if err != nil {
 			fmt.Println("Invalid week value")
 		}
+		typeInt, err := strconv.Atoi(week.Type)
+		if err != nil {
+			fmt.Println("Invalid season type value")
+		}
 		config.Week = weekInt
+		config.SeasonType = typeInt
 	}
 }
 

@@ -30,14 +30,14 @@ func main() {
 	switch config.Mode {
 	case ("normal"):
 		predictions.VerifyWeek()
-		os.Exit(1)
 
 		// Check if prediction has required data for week
 
-		var gameIds []string = predictions.GetGameIds(config.Week)
+		gameIds := predictions.GetGameIds(config.Week)
 		for _, game := range gameIds {
 			predictions.EvaluateGame(game)
 		}
+		os.Exit(1)
 	// case ("test"):
 	// 	test.Simulate()
 	// case ("collect"):

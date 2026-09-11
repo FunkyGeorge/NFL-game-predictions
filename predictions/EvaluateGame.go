@@ -3,22 +3,22 @@ package predictions
 import (
 	"encoding/json"
 	"fmt"
+	"guess-nfl-winners/config"
 	"io"
 	"log"
 	"net/http"
-	"guess-nfl-winners/config"
 )
 
 type Team struct {
-	Id string `json:"id"`
+	Id          string `json:"id"`
 	DisplayName string `json:"displayName"`
 }
 
 type Competitor struct {
-	Id string `json:"id"`
-	CompetitorTeam Team `json:"team"`
-	HomeAway string `json:"homeAway"`
-	Winner bool `json:"winner"`
+	Id             string `json:"id"`
+	CompetitorTeam Team   `json:"team"`
+	HomeAway       string `json:"homeAway"`
+	Winner         bool   `json:"winner"`
 }
 
 type Competition struct {
@@ -26,13 +26,17 @@ type Competition struct {
 }
 
 type EventResponse struct {
-	Name string `json:"name"`
-	ShortName string `json:"shortName"`
+	Name         string        `json:"name"`
+	ShortName    string        `json:"shortName"`
 	Competitions []Competition `json:"competitions"`
 }
 
 func EvaluateGame(gameId string) {
-	req, _ := http.NewRequest("GET", fmt.Sprintf("https://nfl-api-data.p.rapidapi.com/nfl-single-events?id=%s", gameId), nil)
+	// TODO: cache games in db and try to calculate per week relevant stats
+	fmt.Println("Getting stats for game", gameId)
+	return
+	req, _ := http.NewRequest("GET", fmt.Sprintf("https://%s/nfl-single-events?id=%s",
+		config.ApiHost, gameId), nil)
 	req.Header.Add("x-rapidapi-key", config.ApiKey)
 	req.Header.Add("x-rapidapi-host", config.ApiHost)
 
@@ -41,7 +45,7 @@ func EvaluateGame(gameId string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	
+
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
