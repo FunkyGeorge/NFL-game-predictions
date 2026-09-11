@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"guess-nfl-winners/collect"
+	// "guess-nfl-winners/collect"
 	"guess-nfl-winners/config"
 	"guess-nfl-winners/predictions"
-	"guess-nfl-winners/test"
+	// "guess-nfl-winners/test"
 	"os"
+	"time"
 )
 
 func main() {
@@ -20,27 +21,31 @@ func main() {
 	flag.Float64Var(&config.Home, "home", 0.2, "Weight to apply to being the home team")
 
 	flag.Parse()
+	fmt.Printf("Running in %s mode\n", config.Mode)
 
 	switch config.Mode {
 	case ("normal"):
 		if config.Week == 0 {
-			fmt.Println("Must enter a week")
+			// If no week input, should default to last week's results +1
+			fmt.Println("Normal mode requires a week flag")
+			fmt.Println(time.Now())
 			os.Exit(1)
 		}
-		fmt.Println("Running in Normal mode")
-		fmt.Println(config.ApiKey)
+
+		// Check if prediction has required data for week
+
 		var gameIds []string = predictions.GetGameIds(config.Week)
 		for _, game := range gameIds {
 			predictions.EvaluateGame(game)
 		}
-	case ("test"):
-		test.Simulate()
-	case ("collect"):
-		if config.Week == 0 {
-			fmt.Println("Must enter a week")
-			os.Exit(1)
-		}
-		collect.FillDb()
+	// case ("test"):
+	// 	test.Simulate()
+	// case ("collect"):
+	// 	if config.Week == 0 {
+	// 		fmt.Println("Must enter a week")
+	// 		os.Exit(1)
+	// 	}
+	// 	collect.FillDb()
 	default:
 		fmt.Println("Not a valid mode")
 	}

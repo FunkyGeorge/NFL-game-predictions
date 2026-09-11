@@ -1,7 +1,5 @@
 package config
 
-import ()
-
 var Week int
 var Mode string
 
