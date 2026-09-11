@@ -8,10 +8,14 @@ import (
 	"guess-nfl-winners/predictions"
 	// "guess-nfl-winners/test"
 	"os"
-	"time"
 )
 
 func main() {
+	if config.ApiKey == "" {
+		fmt.Println("Couldn't find ApiKey, make sure to set ApiKey in .env")
+		os.Exit(1)
+	}
+
 	flag.StringVar(&config.Mode, "mode", "normal", "run in normal, test, or collect mode")
 	flag.IntVar(&config.Week, "week", 0, "Week to calculate evaluations")
 
@@ -25,12 +29,8 @@ func main() {
 
 	switch config.Mode {
 	case ("normal"):
-		if config.Week == 0 {
-			// If no week input, should default to last week's results +1
-			fmt.Println("Normal mode requires a week flag")
-			fmt.Println(time.Now())
-			os.Exit(1)
-		}
+		predictions.VerifyWeek()
+		os.Exit(1)
 
 		// Check if prediction has required data for week
 
