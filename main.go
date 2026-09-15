@@ -34,6 +34,7 @@ func main() {
 		// Check if prediction has required data for week
 
 		gameIds := predictions.GetGameIds(config.Week)
+		fmt.Println("Starting Evaluations...")
 		for _, game := range gameIds {
 			predictions.EvaluateGame(game)
 		}

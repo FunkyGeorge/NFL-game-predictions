@@ -1,4 +1,3 @@
-
 package database
 
 import "database/sql"
@@ -8,16 +7,16 @@ type NFLTeamsRepository struct {
 }
 
 type NFLTeam struct {
-	TeamId string
+	TeamId               string
 	TurnOverDifferential float32
-	FourthDownConvs float32
-	PassingBigPlays float32
-	RushingBigPlays float32
-	GamesPlayed float32
+	FourthDownConvs      float32
+	PassingBigPlays      float32
+	RushingBigPlays      float32
+	GamesPlayed          float32
 }
 
 func (r *NFLTeamsRepository) CreateTable() error {
- _, err := r.DB.Exec(`CREATE TABLE IF NOT EXISTS nflteams (
+	_, err := r.DB.Exec(`CREATE TABLE IF NOT EXISTS nflteams (
 	teamId TEXT PRIMARY KEY,
 	turnOverDifferential REAL,
 	fourthDownConvs REAL,
@@ -26,9 +25,7 @@ func (r *NFLTeamsRepository) CreateTable() error {
 	gamesPlayed REAL
  )`)
 
- _, err = r.DB.Exec("DELETE FROM nflteams")
-
- return err
+	return err
 }
 
 func (r *NFLTeamsRepository) Insert(row NFLTeam) error {
@@ -39,8 +36,8 @@ func (r *NFLTeamsRepository) Insert(row NFLTeam) error {
 	passingBigPlays,
 	rushingBigPlays,
 	gamesPlayed) VALUES (?, ?, ?, ?, ?, ?)`,
-	row.TeamId, row.TurnOverDifferential, row.FourthDownConvs,
-	row.PassingBigPlays, row.RushingBigPlays, row.GamesPlayed)
+		row.TeamId, row.TurnOverDifferential, row.FourthDownConvs,
+		row.PassingBigPlays, row.RushingBigPlays, row.GamesPlayed)
 
 	return err
 }
@@ -58,7 +55,7 @@ func (r *NFLTeamsRepository) GetAll() ([]NFLTeam, error) {
 	for rows.Next() {
 		var nflTeam NFLTeam
 		err := rows.Scan(&nflTeam.TeamId, &nflTeam.TurnOverDifferential, &nflTeam.FourthDownConvs,
-		&nflTeam.PassingBigPlays, &nflTeam.RushingBigPlays, &nflTeam.GamesPlayed)
+			&nflTeam.PassingBigPlays, &nflTeam.RushingBigPlays, &nflTeam.GamesPlayed)
 
 		if err != nil {
 			return nil, err
