@@ -46,7 +46,7 @@ func GetGameIds(week int) []string {
 		fmt.Println("Don't have events information yet... querying API")
 
 		req, _ := http.NewRequest("GET", fmt.Sprintf(
-			"https://%s/nfl-weeks-events?year=2025&week=%s&type=%s",
+			"https://%s/nfl-weeks-events?year=2026&week=%s&type=%s",
 			config.ApiHost,
 			strconv.Itoa(week),
 			strconv.Itoa(config.SeasonType)), nil)
@@ -75,7 +75,6 @@ func GetGameIds(week int) []string {
 				EventId:    gameItem.GameId,
 				Week:       strconv.Itoa(week),
 				SeasonType: strconv.Itoa(config.SeasonType)}
-			fmt.Println(gameByWeek)
 			err = gbwRepo.Insert(gameByWeek)
 			if err != nil {
 				fmt.Printf("Could not insert game %s\n", gameItem.GameId)

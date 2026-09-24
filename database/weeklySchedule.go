@@ -18,7 +18,7 @@ type Week struct {
 
 func (r *ScheduleRepository) CreateTable() error {
 	_, err := r.DB.Exec(`CREATE TABLE IF NOT EXISTS weeks (
-	 type TEXT PRIMARY KEY,
+	 type TEXT,
 	 value TEXT,
 	 startDate TEXT,
 	 endDate TEXT
@@ -47,7 +47,7 @@ func (r *ScheduleRepository) IsSeeded() bool {
 
 func (r *ScheduleRepository) FindWeekFromTime(time string) (Week, error) {
 	var week Week
-	err := r.DB.QueryRow("SELECT * FROM weeks WHERE startDate < ? AND endDate > ?", time, time).Scan(
+	err := r.DB.QueryRow("SELECT * FROM weeks where startDate > ? ORDER BY startDate LIMIT 1;", time).Scan(
 		&week.Type, &week.Value, &week.StartDate, &week.EndDate)
 
 	if err != nil {

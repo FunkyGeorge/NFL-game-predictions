@@ -1,16 +1,18 @@
 package predictions
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"guess-nfl-winners/config"
+	// "guess-nfl-winners/database"
 	"io"
 	"log"
 	"net/http"
 	"slices"
 )
 
-type NFLTeam struct {
+type NFLTeam_local struct {
 	id           string
 	slug         string
 	abbreviation string
@@ -45,32 +47,47 @@ var ImportantStats []string = []string{
 	"passingBigPlays",
 	"rushingBigPlays"}
 
-func GetTeamImpactIndex(teamId string) (string, float32) {
-	// Check db for team's historical stats
-	req, _ := http.NewRequest("GET", fmt.Sprintf("https://%s/nfl-team-statistics?id=%s&year=2026",
-		config.ApiHost, teamId), nil)
-	req.Header.Add("x-rapidapi-key", config.ApiKey)
-	req.Header.Add("x-rapidapi-host", config.ApiHost)
-
-	resp, err := http.DefaultClient.Do(req)
+func GetTeamImpactIndex(teamId string) float32 {
+	conn, err := sql.Open("sqlite3", "./nfldata.db")
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
+	defer conn.Close()
 
+	// TODO: This can probably be optimized not opening new connections for sqlite
+	// nflTeamStatsRepository := &database.NFLTeamStatsRepository{DB: conn}
+
+	// GetTeamTemporalStats(teamId, config.week)
+	hasCachedRecord := false
 	var teamStats TeamStats
-	err = json.Unmarshal(body, &teamStats)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
 	defaultPlayed := config.Week
-	if err != nil {
-		log.Fatalln(err)
+
+	if !hasCachedRecord {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("https://%s/nfl-team-statistics?id=%s&year=2026",
+			config.ApiHost, teamId), nil)
+		req.Header.Add("x-rapidapi-key", config.ApiKey)
+		req.Header.Add("x-rapidapi-host", config.ApiHost)
+
+		resp, err := http.DefaultClient.Do(req)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+
+		err = json.Unmarshal(body, &teamStats)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	var gamesPlayed float32 = float32(defaultPlayed)
@@ -96,5 +113,5 @@ func GetTeamImpactIndex(teamId string) (string, float32) {
 		}
 	}
 
-	return "", impactIndex / gamesPlayed
+	return impactIndex / gamesPlayed
 }

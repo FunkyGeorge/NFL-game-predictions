@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	// "guess-nfl-winners/collect"
 	"guess-nfl-winners/config"
 	"guess-nfl-winners/predictions"
 	// "guess-nfl-winners/test"
@@ -30,23 +29,14 @@ func main() {
 	switch config.Mode {
 	case ("normal"):
 		predictions.VerifyWeek()
-
-		// Check if prediction has required data for week
-
 		gameIds := predictions.GetGameIds(config.Week)
-		fmt.Println("Starting Evaluations...")
+		fmt.Println("\nStarting Evaluations...")
 		for _, game := range gameIds {
 			predictions.EvaluateGame(game)
 		}
 		os.Exit(1)
-	// case ("test"):
-	// 	test.Simulate()
-	// case ("collect"):
-	// 	if config.Week == 0 {
-	// 		fmt.Println("Must enter a week")
-	// 		os.Exit(1)
-	// 	}
-	// 	collect.FillDb()
+	case ("test"):
+		fmt.Println("Not implemented yet")
 	default:
 		fmt.Println("Not a valid mode")
 	}

@@ -9,7 +9,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"slices"
 )
 
@@ -36,8 +35,6 @@ type EventResponse struct {
 }
 
 func EvaluateGame(gameId string) {
-	// TODO: cache games in db and try to calculate per week relevant stats
-
 	conn, err := sql.Open("sqlite3", "./nfldata.db")
 
 	if err != nil {
@@ -46,11 +43,28 @@ func EvaluateGame(gameId string) {
 
 	defer conn.Close()
 
+	// TODO: This can probably be optimized not opening new connections for sqlite
 	nflEventsRepository := &database.NFLEventsRepository{DB: conn}
-	nflTeamsRepository := &database.NFLTeamsRepository{DB: conn}
-
 	nflEventsRepository.CreateTable()
+
+	nflTeamsRepository := &database.NFLTeamsRepository{DB: conn}
 	nflTeamsRepository.CreateTable()
+
+	nflTeamStatsRepository := &database.NFLTeamStatsRepository{DB: conn}
+	nflTeamStatsRepository.CreateTable()
+
+	// Build NFL teams map
+	allTeams, err := nflTeamsRepository.GetAll()
+
+	teamMap := make(map[string]string)
+
+	for _, t := range allTeams {
+		teamMap[t.TeamId] = t.DisplayName
+	}
+
+	if err != nil {
+		fmt.Println("Error querying all NFL teams")
+	}
 
 	// Check db for event record
 	eventRecord, err := nflEventsRepository.Find(gameId)
@@ -66,6 +80,12 @@ func EvaluateGame(gameId string) {
 
 		resp, err := http.DefaultClient.Do(req)
 
+		if resp.StatusCode != 200 {
+			fmt.Printf("Skipping game %s. Likely due to API error. Try again later for result",
+				gameId)
+			return
+		}
+
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -80,13 +100,11 @@ func EvaluateGame(gameId string) {
 			log.Fatalln(err)
 		}
 
-		// Write to db
-		var teams []string
 		eventRecord = database.NFLEvent{GameId: gameId}
 
+		fmt.Println("Going through competitions", event.Competitions)
+		// TODO: Currently issue here when api fails with exceeded quota. Seems like api side error
 		for index, team := range event.Competitions[0].Competitors {
-			teams = append(teams, team.Id)
-
 			if !slices.Contains(bothTeams, team.Id) {
 				bothTeams = append(bothTeams, team.Id)
 			}
@@ -110,6 +128,18 @@ func EvaluateGame(gameId string) {
 			if team.Winner {
 				eventRecord.Winner = team.Id
 			}
+
+			if _, exists := teamMap[team.Id]; !exists {
+				var newTeam database.NFLTeam
+				newTeam.TeamId = team.Id
+				newTeam.DisplayName = team.CompetitorTeam.DisplayName
+				err = nflTeamsRepository.Insert(newTeam)
+
+				if err != nil {
+					fmt.Println("Could not insert new NFL team")
+				}
+				teamMap[team.Id] = team.CompetitorTeam.DisplayName
+			}
 		}
 
 		err = nflEventsRepository.Insert(eventRecord)
@@ -118,25 +148,22 @@ func EvaluateGame(gameId string) {
 		}
 	}
 
-	fmt.Print(eventRecord)
-	fmt.Println("End of test")
-	os.Exit(1)
 	resultString := ""
-	teamName1, teamIndex1 := GetTeamImpactIndex(eventRecord.HomeTeam)
+	teamIndex1 := GetTeamImpactIndex(eventRecord.HomeTeam)
 	teamIndex1 = teamIndex1 + float32(config.Home) // add 0.2 to home team
 
-	teamName2, teamIndex2 := GetTeamImpactIndex(eventRecord.AwayTeam)
+	teamIndex2 := GetTeamImpactIndex(eventRecord.AwayTeam)
 
 	if teamIndex1 > teamIndex2 {
-		resultString = fmt.Sprintf("%s%s Wins!;", resultString, teamName1)
+		resultString = fmt.Sprintf("%s%s Wins!;", resultString, teamMap[eventRecord.HomeTeam])
 	} else if teamIndex1 < teamIndex2 {
-		resultString = fmt.Sprintf("%s%s Wins!;", resultString, teamName2)
+		resultString = fmt.Sprintf("%s%s Wins!;", resultString, teamMap[eventRecord.AwayTeam])
 	} else {
 		resultString = fmt.Sprintf("%s Tie;", resultString)
 	}
 
-	resultString = fmt.Sprintf("%s%s - ", resultString, teamName1)
-	resultString = fmt.Sprintf("%s%f; %s - ", resultString, teamIndex1, teamName2)
+	resultString = fmt.Sprintf("%s%s - ", resultString, teamMap[eventRecord.HomeTeam])
+	resultString = fmt.Sprintf("%s%f; %s - ", resultString, teamIndex1, teamMap[eventRecord.AwayTeam])
 	resultString = fmt.Sprintf("%s%f\n", resultString, teamIndex2)
 
 	fmt.Println(resultString)
