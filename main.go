@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"guess-nfl-winners/config"
 	"guess-nfl-winners/predictions"
-	// "guess-nfl-winners/test"
 	"os"
 )
 
@@ -31,10 +30,19 @@ func main() {
 		predictions.VerifyWeek()
 		gameIds := predictions.GetGameIds(config.Week)
 		fmt.Println("\nStarting Evaluations...")
+		complete := true
+		output := ""
 		for _, game := range gameIds {
-			predictions.EvaluateGame(game)
+			if result, errored := predictions.EvaluateGame(game); errored {
+				complete = false
+			} else {
+				output = fmt.Sprintf("%s%s\n", output, result)
+			}
 		}
-		os.Exit(1)
+		if !complete {
+			fmt.Println("[WARNING]: Not all games have evaluated, results incomplete")
+		}
+		fmt.Print(output)
 	case ("test"):
 		fmt.Println("Not implemented yet")
 	default:

@@ -34,7 +34,7 @@ type EventResponse struct {
 	Competitions []Competition `json:"competitions"`
 }
 
-func EvaluateGame(gameId string) {
+func EvaluateGame(gameId string) (result string, errored bool) {
 	conn, err := sql.Open("sqlite3", "./nfldata.db")
 
 	if err != nil {
@@ -83,7 +83,7 @@ func EvaluateGame(gameId string) {
 		if resp.StatusCode != 200 {
 			fmt.Printf("Skipping game %s. Likely due to API error. Try again later for result",
 				gameId)
-			return
+			return "", true
 		}
 
 		if err != nil {
@@ -166,5 +166,5 @@ func EvaluateGame(gameId string) {
 	resultString = fmt.Sprintf("%s%f; %s - ", resultString, teamIndex1, teamMap[eventRecord.AwayTeam])
 	resultString = fmt.Sprintf("%s%f\n", resultString, teamIndex2)
 
-	fmt.Println(resultString)
+	return resultString, false
 }
