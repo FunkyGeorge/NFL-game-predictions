@@ -1,8 +1,7 @@
 package config
 
-import ()
-
 var Week int
+var SeasonType int = 2 // Default to 2 which is Regular Season
 var Mode string
 
 // Testing variables

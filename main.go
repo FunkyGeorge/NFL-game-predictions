@@ -3,14 +3,18 @@ package main
 import (
 	"flag"
 	"fmt"
-	"guess-nfl-winners/collect"
 	"guess-nfl-winners/config"
 	"guess-nfl-winners/predictions"
-	"guess-nfl-winners/test"
+	// "guess-nfl-winners/test"
 	"os"
 )
 
 func main() {
+	if config.ApiKey == "" {
+		fmt.Println("Couldn't find ApiKey, make sure to set ApiKey in .env")
+		os.Exit(1)
+	}
+
 	flag.StringVar(&config.Mode, "mode", "normal", "run in normal, test, or collect mode")
 	flag.IntVar(&config.Week, "week", 0, "Week to calculate evaluations")
 
@@ -20,27 +24,19 @@ func main() {
 	flag.Float64Var(&config.Home, "home", 0.2, "Weight to apply to being the home team")
 
 	flag.Parse()
+	fmt.Printf("Running in %s mode\n", config.Mode)
 
 	switch config.Mode {
 	case ("normal"):
-		if config.Week == 0 {
-			fmt.Println("Must enter a week")
-			os.Exit(1)
-		}
-		fmt.Println("Running in Normal mode")
-		fmt.Println(config.ApiKey)
-		var gameIds []string = predictions.GetGameIds(config.Week)
+		predictions.VerifyWeek()
+		gameIds := predictions.GetGameIds(config.Week)
+		fmt.Println("\nStarting Evaluations...")
 		for _, game := range gameIds {
 			predictions.EvaluateGame(game)
 		}
+		os.Exit(1)
 	case ("test"):
-		test.Simulate()
-	case ("collect"):
-		if config.Week == 0 {
-			fmt.Println("Must enter a week")
-			os.Exit(1)
-		}
-		collect.FillDb()
+		fmt.Println("Not implemented yet")
 	default:
 		fmt.Println("Not a valid mode")
 	}

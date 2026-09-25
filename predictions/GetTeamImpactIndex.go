@@ -1,40 +1,42 @@
 package predictions
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"guess-nfl-winners/config"
+	// "guess-nfl-winners/database"
 	"io"
 	"log"
 	"net/http"
 	"slices"
-	"guess-nfl-winners/config"
 )
 
-type NFLTeam struct {
-	id string
-	slug string
+type NFLTeam_local struct {
+	id           string
+	slug         string
 	abbreviation string
-	displayName string
+	displayName  string
 }
 
 type Stat struct {
-	Name string `json:"name"`
-	DisplayName string `json:"displayName"`
-	Description string `json:"description"`
-	Value float32 `json:"value"`
-	Rank int `json:"rank"`
+	Name        string  `json:"name"`
+	DisplayName string  `json:"displayName"`
+	Description string  `json:"description"`
+	Value       float32 `json:"value"`
+	Rank        int     `json:"rank"`
 }
 
 type Category struct {
 	DisplayName string `json:"displayName"`
-	Summary string `json:"summary"`
-	Stats []Stat `json:"stats"`
+	Summary     string `json:"summary"`
+	Stats       []Stat `json:"stats"`
 }
 
 type TeamStats struct {
 	Statistics struct {
 		Splits struct {
-			Id string `json:"id"`
+			Id         string     `json:"id"`
 			Categories []Category `json:"categories"`
 		} `json:"splits"`
 	} `json:"statistics"`
@@ -46,30 +48,46 @@ var ImportantStats []string = []string{
 	"rushingBigPlays"}
 
 func GetTeamImpactIndex(teamId string) float32 {
-	req, _ := http.NewRequest("GET", fmt.Sprintf("https://nfl-api-data.p.rapidapi.com/nfl-team-statistics?id=%s&year=2025", teamId), nil)
-	req.Header.Add("x-rapidapi-key", config.ApiKey)
-	req.Header.Add("x-rapidapi-host", config.ApiHost)
-
-	resp, err := http.DefaultClient.Do(req)
+	conn, err := sql.Open("sqlite3", "./nfldata.db")
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
-	
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
 
+	defer conn.Close()
+
+	// TODO: This can probably be optimized not opening new connections for sqlite
+	// nflTeamStatsRepository := &database.NFLTeamStatsRepository{DB: conn}
+
+	// GetTeamTemporalStats(teamId, config.week)
+	hasCachedRecord := false
 	var teamStats TeamStats
-	err = json.Unmarshal(body, &teamStats)
-
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-
 	defaultPlayed := config.Week
-	if err != nil {
-		log.Fatalln(err)
+
+	if !hasCachedRecord {
+		req, _ := http.NewRequest("GET", fmt.Sprintf("https://%s/nfl-team-statistics?id=%s&year=2026",
+			config.ApiHost, teamId), nil)
+		req.Header.Add("x-rapidapi-key", config.ApiKey)
+		req.Header.Add("x-rapidapi-host", config.ApiHost)
+
+		resp, err := http.DefaultClient.Do(req)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
+
+		err = json.Unmarshal(body, &teamStats)
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	var gamesPlayed float32 = float32(defaultPlayed)
